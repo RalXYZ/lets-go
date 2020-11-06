@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -37,7 +36,6 @@ func dbCreate(x *bar) *content {
 		panic(err.Error())
 	}
 	uid, _ := result.LastInsertId()
-	fmt.Println("The uid of", x.id, "is", uid)
 	return &content{uid, x.id, x.age}
 }
 
@@ -57,6 +55,7 @@ func dbRetrieve(uid int64) *content {
 	}
 	defer rows.Close()
 
+	rows.Next()
 	var (
 		age int
 		id  string
@@ -80,7 +79,7 @@ func dbUpdate(dst *content) *content {
 	// num, _ := result.RowsAffected()
 }
 
-func dbDeleteByID(uid int64) {
+func dbDelete(uid int64) {
 	db := dbConn()
 	defer db.Close()
 	_, err := db.Exec("DELETE FROM bar WHERE uid = ?", uid)
