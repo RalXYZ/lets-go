@@ -2,7 +2,7 @@
 
 This is my first Golang project.  
 This project is about implementing basic CRUD operations using Golang, which is an assignment of QSC backend team.  
-Most of the code segments in `db.go` are provided by @CHN-ChenYi   
+The structure of `db.go` is provided by [@CHN-ChenYi](https://github.com/CHN-ChenYi)  
 The aim of this project is to create a simple server which has the following API:  
 
 ## POST /create
