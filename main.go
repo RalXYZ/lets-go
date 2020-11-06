@@ -1,52 +1,46 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"github.com/labstack/echo/v4"
 	"net/http"
-	"net/url"
 	"strconv"
 )
 
-func output(response http.ResponseWriter, content *content) {
-	fmt.Fprintf(response, "%v %v %v\n", content.uid, content.id, content.age)
+type Content struct {
+	Uid int64  `json:"uid"`
+	Id  string `json:"id"`
+	Age int    `json:"age"`
 }
 
 func main() {
-	http.HandleFunc("/create", func(response http.ResponseWriter, request *http.Request) {
-		temp, _ := url.ParseQuery(request.URL.RawQuery)
-		id := temp.Get("id")
-		age, _ := strconv.Atoi(temp.Get("age")) // FIXME: Add error handler
+	e := echo.New()
+
+	e.GET("/create", func(c echo.Context) error {
+		id := c.QueryParam("id")
+		age, _ := strconv.Atoi(c.QueryParam("age"))
 		content := dbCreate(&bar{id, age})
-		output(response, content)
-		/*
-			for key, value := range temp {
-				fmt.Println(key, value)
-			}
-		*/
+		return c.JSON(http.StatusOK, content)
 	})
 
-	http.HandleFunc("/retrieve", func(response http.ResponseWriter, request *http.Request) {
-		temp, _ := url.ParseQuery(request.URL.RawQuery)
-		uid, _ := strconv.ParseInt(temp.Get("uid"), 10, 64) // FIXME: Add error handler
+	e.GET("/retrieve", func(c echo.Context) error {
+		uid, _ := strconv.ParseInt(c.QueryParam("uid"), 10, 64)
 		content := dbRetrieve(uid)
-		output(response, content)
+		return c.JSON(http.StatusOK, content)
 	})
 
-	http.HandleFunc("/update", func(response http.ResponseWriter, request *http.Request) {
-		temp, _ := url.ParseQuery(request.URL.RawQuery)
-		uid, _ := strconv.ParseInt(temp.Get("uid"), 10, 64) // FIXME: Add error handler
-		id := temp.Get("id")
-		age, _ := strconv.Atoi(temp.Get("age")) // FIXME: Add error handler
-		content := dbUpdate(&content{uid, id, age})
-		output(response, content)
+	e.GET("/update", func(c echo.Context) error {
+		uid, _ := strconv.ParseInt(c.QueryParam("uid"), 10, 64)
+		id := c.QueryParam("id")
+		age, _ := strconv.Atoi(c.QueryParam("age"))
+		content := dbUpdate(&Content{uid, id, age})
+		return c.JSON(http.StatusOK, content)
 	})
 
-	http.HandleFunc("/delete", func(response http.ResponseWriter, request *http.Request) {
-		temp, _ := url.ParseQuery(request.URL.RawQuery)
-		uid, _ := strconv.ParseInt(temp.Get("uid"), 10, 64) // FIXME: Add error handler
+	e.GET("/delete", func(c echo.Context) error {
+		uid, _ := strconv.ParseInt(c.QueryParam("uid"), 10, 64)
 		dbDelete(uid)
+		return c.String(http.StatusOK, "Delete operation succeeded")
 	})
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	e.Logger.Fatal(e.Start(":8080"))
 }

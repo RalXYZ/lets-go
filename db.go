@@ -10,12 +10,6 @@ type bar struct {
 	age int
 }
 
-type content struct {
-	uid int64
-	id  string // name
-	age int
-}
-
 func dbConn() *sql.DB {
 	dbDriver := "mysql"
 	dbUser := "admin"
@@ -28,7 +22,7 @@ func dbConn() *sql.DB {
 	return db
 }
 
-func dbCreate(x *bar) *content {
+func dbCreate(x *bar) *Content {
 	db := dbConn()
 	defer db.Close()
 	result, err := db.Exec("INSERT INTO bar(id, age) VALUES(?, ?)", x.id, x.age)
@@ -36,10 +30,10 @@ func dbCreate(x *bar) *content {
 		panic(err.Error())
 	}
 	uid, _ := result.LastInsertId()
-	return &content{uid, x.id, x.age}
+	return &Content{uid, x.id, x.age}
 }
 
-func dbRetrieve(uid int64) *content {
+func dbRetrieve(uid int64) *Content {
 	db := dbConn()
 	defer db.Close()
 
@@ -65,13 +59,13 @@ func dbRetrieve(uid int64) *content {
 		panic(err.Error())
 	}
 
-	return &content{uid, id, age}
+	return &Content{uid, id, age}
 }
 
-func dbUpdate(dst *content) *content {
+func dbUpdate(dst *Content) *Content {
 	db := dbConn()
 	defer db.Close()
-	_, err := db.Exec("UPDATE bar SET id = ?, age = ? WHERE uid = ?", dst.id, dst.age, dst.uid)
+	_, err := db.Exec("UPDATE bar SET id = ?, age = ? WHERE uid = ?", dst.Id, dst.Age, dst.Uid)
 	if err != nil {
 		panic(err.Error())
 	}
