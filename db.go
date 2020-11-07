@@ -65,13 +65,22 @@ func dbRetrieve(uid int64) (int, *Content) {
 func dbUpdate(dst *Content) (int, *Content) {
 	db := dbConn()
 	defer db.Close()
-	result, err := db.Exec("UPDATE bar SET id = ?, age = ? WHERE uid = ?", dst.Id, dst.Age, dst.Uid)
+
+	rows, err := db.Query("SELECT COUNT(uid) FROM bar WHERE uid = ?", dst.Uid)
 	if err != nil {
 		panic(err.Error())
 	}
-	num, _ := result.RowsAffected()
-	if num == 0 { // FIXME: parameters are valid, uid exists, but content hasn't been updated
+	defer rows.Close()
+	rows.Next()
+	var num int
+	err = rows.Scan(&num)
+	if num == 0 {
 		return http.StatusNotFound, nil
+	}
+
+	_, err = db.Exec("UPDATE bar SET id = ?, age = ? WHERE uid = ?", dst.Id, dst.Age, dst.Uid)
+	if err != nil {
+		panic(err.Error())
 	}
 	return http.StatusOK, dst
 }
