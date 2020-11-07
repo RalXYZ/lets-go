@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
+	"net/http"
 )
 
 type bar struct {
@@ -33,7 +34,7 @@ func dbCreate(x *bar) *Content {
 	return &Content{uid, x.id, x.age}
 }
 
-func dbRetrieve(uid int64) *Content {
+func dbRetrieve(uid int64) (int, *Content) {
 	db := dbConn()
 	defer db.Close()
 
@@ -51,34 +52,36 @@ func dbRetrieve(uid int64) *Content {
 
 	rows.Next()
 	var (
-		age int
 		id  string
+		age int
 	)
 	err = rows.Scan(&age, &id)
 	if err != nil {
-		panic(err.Error())
+		return http.StatusNotFound, nil
 	}
-
-	return &Content{uid, id, age}
+	return http.StatusOK, &Content{uid, id, age}
 }
 
-func dbUpdate(dst *Content) *Content {
+func dbUpdate(dst *Content) (int, *Content) {
 	db := dbConn()
 	defer db.Close()
-	_, err := db.Exec("UPDATE bar SET id = ?, age = ? WHERE uid = ?", dst.Id, dst.Age, dst.Uid)
+	result, err := db.Exec("UPDATE bar SET id = ?, age = ? WHERE uid = ?", dst.Id, dst.Age, dst.Uid)
 	if err != nil {
 		panic(err.Error())
 	}
-	return dst
-	// num, _ := result.RowsAffected()
+	num, _ := result.RowsAffected()
+	if num == 0 { // FIXME: parameters are valid, uid exists, but content hasn't been updated
+		return http.StatusNotFound, nil
+	}
+	return http.StatusOK, dst
 }
 
-func dbDelete(uid int64) {
+func dbDelete(uid int64) int {
 	db := dbConn()
 	defer db.Close()
 	_, err := db.Exec("DELETE FROM bar WHERE uid = ?", uid)
 	if err != nil {
-		panic(err.Error())
+		return http.StatusNotFound
 	}
-	// num, _ := result.RowsAffected()
+	return http.StatusOK
 }
