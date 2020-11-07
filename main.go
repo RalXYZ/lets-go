@@ -15,31 +15,31 @@ type Content struct {
 func main() {
 	e := echo.New()
 
-	e.GET("/create", func(c echo.Context) error {
-		id := c.QueryParam("id")
-		age, _ := strconv.Atoi(c.QueryParam("age"))
+	e.POST("/create", func(context echo.Context) error {
+		id := context.QueryParam("id")
+		age, _ := strconv.Atoi(context.QueryParam("age"))
 		content := dbCreate(&bar{id, age})
-		return c.JSON(http.StatusOK, content)
+		return context.JSON(http.StatusOK, content)
 	})
 
-	e.GET("/retrieve", func(c echo.Context) error {
-		uid, _ := strconv.ParseInt(c.QueryParam("uid"), 10, 64)
+	e.GET("/retrieve", func(context echo.Context) error {
+		uid, _ := strconv.ParseInt(context.QueryParam("uid"), 10, 64)
 		content := dbRetrieve(uid)
-		return c.JSON(http.StatusOK, content)
+		return context.JSON(http.StatusOK, content)
 	})
 
-	e.GET("/update", func(c echo.Context) error {
-		uid, _ := strconv.ParseInt(c.QueryParam("uid"), 10, 64)
-		id := c.QueryParam("id")
-		age, _ := strconv.Atoi(c.QueryParam("age"))
+	e.PUT("/update", func(context echo.Context) error {
+		uid, _ := strconv.ParseInt(context.QueryParam("uid"), 10, 64)
+		id := context.QueryParam("id")
+		age, _ := strconv.Atoi(context.QueryParam("age"))
 		content := dbUpdate(&Content{uid, id, age})
-		return c.JSON(http.StatusOK, content)
+		return context.JSON(http.StatusOK, content)
 	})
 
-	e.GET("/delete", func(c echo.Context) error {
-		uid, _ := strconv.ParseInt(c.QueryParam("uid"), 10, 64)
+	e.DELETE("/delete", func(context echo.Context) error {
+		uid, _ := strconv.ParseInt(context.QueryParam("uid"), 10, 64)
 		dbDelete(uid)
-		return c.String(http.StatusOK, "Delete operation succeeded")
+		return context.String(http.StatusOK, "Delete operation succeeded")
 	})
 
 	e.Logger.Fatal(e.Start(":8080"))
