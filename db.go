@@ -11,6 +11,23 @@ type bar struct {
 	age int
 }
 
+func uidExists(uid int64) bool {
+	db := dbConn()
+	defer db.Close()
+	rows, err := db.Query("SELECT COUNT(uid) FROM bar WHERE uid = ?", uid)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer rows.Close()
+	rows.Next()
+	var matchNum int
+	err = rows.Scan(&matchNum)
+	if matchNum == 0 {
+		return false
+	}
+	return true
+}
+
 func dbConn() *sql.DB {
 	dbDriver := "mysql"
 	dbUser := "admin"
@@ -66,19 +83,11 @@ func dbUpdate(dst *Content) (int, *Content) {
 	db := dbConn()
 	defer db.Close()
 
-	rows, err := db.Query("SELECT COUNT(uid) FROM bar WHERE uid = ?", dst.Uid)
-	if err != nil {
-		panic(err.Error())
-	}
-	defer rows.Close()
-	rows.Next()
-	var num int
-	err = rows.Scan(&num)
-	if num == 0 {
+	if !uidExists(dst.Uid) {
 		return http.StatusNotFound, nil
 	}
 
-	_, err = db.Exec("UPDATE bar SET id = ?, age = ? WHERE uid = ?", dst.Id, dst.Age, dst.Uid)
+	_, err := db.Exec("UPDATE bar SET id = ?, age = ? WHERE uid = ?", dst.Id, dst.Age, dst.Uid)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -88,6 +97,11 @@ func dbUpdate(dst *Content) (int, *Content) {
 func dbDelete(uid int64) int {
 	db := dbConn()
 	defer db.Close()
+
+	if !uidExists(uid) {
+		return http.StatusNotFound
+	}
+
 	_, err := db.Exec("DELETE FROM bar WHERE uid = ?", uid)
 	if err != nil {
 		return http.StatusNotFound
