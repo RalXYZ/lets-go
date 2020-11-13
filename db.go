@@ -2,13 +2,22 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"io/ioutil"
 	"net/http"
+	"os"
 )
 
 type bar struct {
 	id  string
 	age int
+}
+
+type Login struct {
+	DbUser   string `json:"dbUser"`
+	DbPasswd string `json:"dbPasswd"`
 }
 
 func uidExists(uid int64) bool {
@@ -28,10 +37,24 @@ func uidExists(uid int64) bool {
 	return true
 }
 
+func getLoginInfo(file string) (string, string) {
+	jsonFile, err := os.Open(file)
+	if err != nil {
+		fmt.Println("error: Requires a database configuration file!")
+		panic(err)
+	}
+	defer jsonFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	var login Login
+	json.Unmarshal([]byte(byteValue), &login)
+
+	return login.DbUser, login.DbPasswd
+}
+
 func dbConn() *sql.DB {
 	dbDriver := "mysql"
-	dbUser := "admin"
-	dbPasswd := "admin"
+	dbUser, dbPasswd := getLoginInfo("conf.json")
 	dbName := "foo"
 	db, err := sql.Open(dbDriver, dbUser+":"+dbPasswd+"@/"+dbName)
 	if err != nil {
