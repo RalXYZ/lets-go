@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"net/http"
 	"strconv"
 )
@@ -24,6 +25,10 @@ func getParameters(c echo.Context) *contentRaw {
 
 func main() {
 	e := echo.New()
+	e.HideBanner = true
+
+	e.Use(middleware.Recover())
+	e.Use(middleware.Logger())
 
 	e.POST("/create", func(c echo.Context) error {
 		parameters := getParameters(c)
@@ -69,5 +74,8 @@ func main() {
 		}
 	})
 
-	e.Logger.Fatal(e.Start(":8080"))
+	go func() {
+		e.Logger.Fatal(e.Start(":8080"))
+	}()
+	e.Logger.Fatal(e.StartTLS(":8443", "crt/server.crt", "crt/server.key"))
 }
